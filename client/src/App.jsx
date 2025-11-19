@@ -1,85 +1,72 @@
-import { useState, useEffect } from 'react';
-import axios from 'axios';
+import React, { useContext } from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate, Link } from 'react-router-dom';
+import { AuthProvider, AuthContext } from './context/AuthContext.jsx';
+import HomePage from './pages/HomePage';
+import LoginPage from './pages/LoginPage';
+import RegisterPage from './pages/RegisterPage';
 import './App.css';
 
-// Set a base URL for all axios requests
-const API_URL = 'http://localhost:3001/api';
+const ProtectedRoute = ({ children }) => {
+  const { isAuthenticated } = useContext(AuthContext);
+  return isAuthenticated() ? children : <Navigate to="/login" />;
+};
 
-function App() {
-  const [todos, setTodos] = useState([]);
-  const [newTodo, setNewTodo] = useState('');
+const App = () => {
+  return (
+    <Router>
+      <AuthProvider>
+        <div className="App">
+          <AppRoutes />
+        </div>
+      </AuthProvider>
+    </Router>
+  );
+};
 
-  // Fetch todos from the server when the component mounts
-  useEffect(() => {
-    fetchTodos();
-  }, []);
-
-  const fetchTodos = async () => {
-    try {
-      const response = await axios.get(`${API_URL}/todos`);
-      setTodos(response.data);
-    } catch (error) {
-      console.error("Error fetching todos:", error);
-    }
-  };
-
-  const addTodo = async (e) => {
-    e.preventDefault();
-    if (!newTodo.trim()) return; // Prevent adding empty todos
-    try {
-      const response = await axios.post(`${API_URL}/todos`, { text: newTodo });
-      setTodos([...todos, response.data]);
-      setNewTodo(''); // Clear the input field
-    } catch (error) {
-      console.error("Error adding todo:", error);
-    }
-  };
-
-  const updateTodo = async (id, completed) => {
-    try {
-      const response = await axios.put(`${API_URL}/todos/${id}`, { completed });
-      setTodos(todos.map(todo => (todo.id === id ? response.data : todo)));
-    } catch (error) {
-      console.error("Error updating todo:", error);
-    }
-  };
-
-  const deleteTodo = async (id) => {
-    try {
-      await axios.delete(`${API_URL}/todos/${id}`);
-      setTodos(todos.filter(todo => todo.id !== id));
-    } catch (error) {
-      console.error("Error deleting todo:", error);
-    }
-  };
+const AppRoutes = () => {
+  const { isAuthenticated, logout } = useContext(AuthContext);
 
   return (
-    <div className="App">
-      <h1>Persoonlijke Hub - Takenlijst</h1>
-      <form onSubmit={addTodo} className="todo-form">
-        <input
-          type="text"
-          value={newTodo}
-          onChange={(e) => setNewTodo(e.target.value)}
-          placeholder="Voeg een nieuwe taak toe..."
-        />
-        <button type="submit">Toevoegen</button>
-      </form>
-      <ul className="todo-list">
-        {todos.map(todo => (
-          <li key={todo.id} className={todo.completed ? 'completed' : ''}>
-            <input
-              type="checkbox"
-              checked={todo.completed}
-              onChange={() => updateTodo(todo.id, !todo.completed)}
-            />
-            <span>{todo.text}</span>
-            <button onClick={() => deleteTodo(todo.id)} className="delete-btn">Verwijder</button>
+    <>
+      <nav>
+        <ul>
+          <li>
+            <Link to="/">Home</Link>
           </li>
-        ))}
-      </ul>
-    </div>
+          <div style={{ display: 'flex', gap: '1rem' }}>
+            {!isAuthenticated() ? (
+              <>
+                <li>
+                  <Link to="/login">Login</Link>
+                </li>
+                <li>
+                  <Link to="/register">Register</Link>
+                </li>
+              </>
+            ) : (
+              <li>
+                <button onClick={logout}>Logout</button>
+              </li>
+            )}
+          </div>
+        </ul>
+      </nav>
+      <main>
+        <Routes>
+          <Route
+            path="/"
+            element={
+              <ProtectedRoute>
+                <HomePage />
+              </ProtectedRoute>
+            }
+          />
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="/register" element={<RegisterPage />} />
+        </Routes>
+      </main>
+    </>
   );
-}
+};
 
 export default App;
