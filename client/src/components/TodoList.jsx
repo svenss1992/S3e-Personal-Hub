@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
-import './../App.css'; // Adjust the path to App.css
 
 // Set a base URL for all axios requests
 const API_URL = 'http://localhost:3001/api';
@@ -60,25 +59,27 @@ function TodoList() {
 
   return (
     <div>
-      <form onSubmit={addTodo} className="todo-form">
+      <form onSubmit={addTodo} className="flex mb-4">
         <input
           type="text"
           value={newTodo}
           onChange={(e) => setNewTodo(e.target.value)}
           placeholder="Voeg een nieuwe taak toe..."
+          className="flex-grow p-2 border border-gray-300 rounded-l-md focus:outline-none focus:ring-2 focus:ring-blue-500"
         />
-        <button type="submit">Toevoegen</button>
+        <button type="submit" className="bg-blue-500 text-white p-2 rounded-r-md hover:bg-blue-600">Toevoegen</button>
       </form>
-      <ul className="todo-list">
+      <ul className="space-y-2">
         {todos.map(todo => (
-          <li key={todo.id} className={todo.completed ? 'completed' : ''}>
+          <li key={todo.id} className={`flex items-center p-2 rounded-md ${todo.completed ? 'bg-gray-200' : 'bg-white'}`}>
             <input
               type="checkbox"
               checked={todo.completed}
               onChange={() => updateTodo(todo.id, !todo.completed)}
+              className="mr-2 h-4 w-4 text-blue-500 border-gray-300 rounded focus:ring-blue-500"
             />
-            <span>{todo.text}</span>
-            <button onClick={() => deleteTodo(todo.id)} className="delete-btn">Verwijder</button>
+            <span className={`flex-grow ${todo.completed ? 'line-through text-gray-500' : 'text-gray-800'}`}>{todo.text}</span>
+            <button onClick={() => deleteTodo(todo.id)} className="text-red-500 hover:text-red-700">Verwijder</button>
           </li>
         ))}
       </ul>
